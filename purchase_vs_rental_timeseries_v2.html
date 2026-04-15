@@ -1,0 +1,269 @@
+
+<h2 class="sr-only">구매 vs 렌탈 36개월 누적 비용 시계열 비교 차트 (수정본) - 월 렌탈 274.8만원 기준</h2>
+
+<div style="padding: 1rem 0;">
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 12px; font-size: 12px; color: var(--color-text-secondary);">
+  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 20px; height: 3px; border-radius: 1px; background: #534AB7;"></span> 구매 (일시불 7,833만원 고정)</span>
+  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 20px; height: 3px; border-radius: 1px; background: #1D9E75;"></span> 렌탈 (퇴사 0%, 월 274.8만원)</span>
+  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 20px; height: 3px; border-radius: 1px; background: #1D9E75; opacity: 0.4;"></span> 렌탈 (퇴사율 적용)</span>
+  <span style="display: flex; align-items: center; gap: 4px;"><span style="width: 4px; height: 4px; border-radius: 50%; background: #E24B4A;"></span> 손익분기점</span>
+</div>
+
+<div style="position: relative; width: 100%; height: 400px;">
+  <canvas id="timeChart" role="img" aria-label="구매 대 렌탈 36개월 누적 비용 시계열 비교. 구매 7833만원 고정, 렌탈 월 274.8만원 누적, 약 29개월차에 교차.">구매 7833만원 고정, 렌탈 월 274.8만원 누적</canvas>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 1.5rem;">
+  <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem;">
+    <div style="font-size: 12px; color: var(--color-text-secondary);">6개월 시점</div>
+    <div style="font-size: 18px; font-weight: 500; margin-top: 2px;" id="m6diff"></div>
+    <div style="font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px;" id="m6who"></div>
+  </div>
+  <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem;">
+    <div style="font-size: 12px; color: var(--color-text-secondary);">12개월 시점</div>
+    <div style="font-size: 18px; font-weight: 500; margin-top: 2px;" id="m12diff"></div>
+    <div style="font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px;" id="m12who"></div>
+  </div>
+  <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem;">
+    <div style="font-size: 12px; color: var(--color-text-secondary);">손익분기점</div>
+    <div style="font-size: 18px; font-weight: 500; margin-top: 2px; color: #E24B4A;" id="bep"></div>
+    <div style="font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px;">이후 구매가 유리</div>
+  </div>
+  <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem;">
+    <div style="font-size: 12px; color: var(--color-text-secondary);">36개월 차이</div>
+    <div style="font-size: 18px; font-weight: 500; margin-top: 2px;" id="m36diff"></div>
+    <div style="font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px;" id="m36who"></div>
+  </div>
+</div>
+
+<div style="margin-top: 1.5rem;">
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 0.75rem;">
+    <label style="font-size: 14px; color: var(--color-text-secondary); min-width: 120px;">연간 퇴사율</label>
+    <input type="range" min="0" max="40" value="0" step="5" id="turnover" style="flex: 1;" />
+    <span style="font-size: 14px; font-weight: 500; min-width: 36px;" id="turnoverOut">0%</span>
+  </div>
+  <div style="font-size: 12px; color: var(--color-text-tertiary); line-height: 1.6; padding: 8px 12px; background: var(--color-background-secondary); border-radius: var(--border-radius-md);">
+    퇴사율을 높이면 렌탈 기기 반납으로 월 비용이 줄어들어 손익분기점이 뒤로 밀립니다. 퇴사율이 충분히 높으면 36개월 내 손익분기점에 도달하지 않을 수도 있습니다.
+  </div>
+</div>
+
+<div style="margin-top: 1.5rem; overflow-x: auto;">
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    <thead>
+      <tr>
+        <th style="text-align:left; padding:8px 10px; background:var(--color-background-secondary); font-weight:500; font-size:12px; color:var(--color-text-secondary); border-bottom:0.5px solid var(--color-border-tertiary);">구간</th>
+        <th style="text-align:right; padding:8px 10px; background:var(--color-background-secondary); font-weight:500; font-size:12px; color:var(--color-text-secondary); border-bottom:0.5px solid var(--color-border-tertiary);">렌탈 누적</th>
+        <th style="text-align:right; padding:8px 10px; background:var(--color-background-secondary); font-weight:500; font-size:12px; color:var(--color-text-secondary); border-bottom:0.5px solid var(--color-border-tertiary);">구매 고정</th>
+        <th style="text-align:right; padding:8px 10px; background:var(--color-background-secondary); font-weight:500; font-size:12px; color:var(--color-text-secondary); border-bottom:0.5px solid var(--color-border-tertiary);">차이</th>
+        <th style="text-align:center; padding:8px 10px; background:var(--color-background-secondary); font-weight:500; font-size:12px; color:var(--color-text-secondary); border-bottom:0.5px solid var(--color-border-tertiary);">유리한 쪽</th>
+      </tr>
+    </thead>
+    <tbody id="phaseBody"></tbody>
+  </table>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+<script>
+const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+const textColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)';
+
+const PURCHASE = 7833;
+
+const MAC_MONTHLY = 10.2;
+const GRAM_MONTHLY = 8.9;
+const MAC_N = 6;
+const GRAM_N = 24;
+const MONTHLY_TOTAL = MAC_N * MAC_MONTHLY + GRAM_N * GRAM_MONTHLY;
+
+const months = Array.from({length: 37}, (_, i) => i);
+const labels = months.map(m => m + '개월');
+const purchaseLine = months.map(() => PURCHASE);
+
+function calcRental(turnoverPct) {
+  const mRate = 1 - Math.pow(1 - turnoverPct / 100, 1/12);
+  let cum = 0, am = MAC_N, ag = GRAM_N;
+  const d = [0];
+  for (let m = 1; m <= 36; m++) {
+    cum += am * MAC_MONTHLY + ag * GRAM_MONTHLY;
+    if (turnoverPct > 0) {
+      am = Math.max(0, am - am * mRate);
+      ag = Math.max(0, ag - ag * mRate);
+    }
+    d.push(Math.round(cum * 10) / 10);
+  }
+  return d;
+}
+
+function findBEP(rd) {
+  for (let i = 1; i < rd.length; i++) {
+    if (rd[i] >= PURCHASE) {
+      const f = (PURCHASE - rd[i-1]) / (rd[i] - rd[i-1]);
+      return Math.round((i - 1 + f) * 10) / 10;
+    }
+  }
+  return null;
+}
+
+const rentalBase = calcRental(0);
+
+const chart = new Chart(document.getElementById('timeChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: '구매 (일시불)',
+        data: purchaseLine,
+        borderColor: '#534AB7',
+        backgroundColor: 'transparent',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        borderDash: [6, 3],
+        tension: 0
+      },
+      {
+        label: '렌탈 (퇴사 0%)',
+        data: rentalBase,
+        borderColor: '#1D9E75',
+        backgroundColor: 'transparent',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        tension: 0.1
+      },
+      {
+        label: '렌탈 (퇴사율 적용)',
+        data: calcRental(0),
+        borderColor: 'rgba(29,158,117,0.35)',
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        borderDash: [4, 4],
+        tension: 0.1,
+        hidden: true
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    scales: {
+      x: {
+        grid: { color: gridColor },
+        ticks: { color: textColor, font: { size: 11 }, autoSkip: true, maxTicksLimit: 7 }
+      },
+      y: {
+        grid: { color: gridColor },
+        ticks: {
+          color: textColor, font: { size: 11 },
+          callback: v => Math.round(v).toLocaleString() + '만'
+        },
+        min: 0,
+        suggestedMax: 11000
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ctx.dataset.label + ': ' + Math.round(ctx.parsed.y).toLocaleString() + '만원'
+        }
+      },
+      annotation: {
+        annotations: {
+          bepLine: {
+            type: 'line',
+            xMin: findBEP(rentalBase),
+            xMax: findBEP(rentalBase),
+            borderColor: '#E24B4A',
+            borderWidth: 1.5,
+            borderDash: [3, 3],
+            label: {
+              display: true,
+              content: '손익분기점',
+              position: 'start',
+              backgroundColor: isDark ? '#501313' : '#FCEBEB',
+              color: isDark ? '#F7C1C1' : '#791F1F',
+              font: { size: 11 },
+              padding: { top: 3, bottom: 3, left: 6, right: 6 },
+              borderRadius: 4
+            }
+          },
+          p1: { type: 'box', xMin: 0, xMax: 6, backgroundColor: isDark ? 'rgba(29,158,117,0.06)' : 'rgba(29,158,117,0.04)', borderWidth: 0 },
+          p2: { type: 'box', xMin: 6, xMax: 12, backgroundColor: isDark ? 'rgba(29,158,117,0.03)' : 'rgba(29,158,117,0.02)', borderWidth: 0 },
+          p3: { type: 'box', xMin: 12, xMax: 24, backgroundColor: isDark ? 'rgba(83,74,183,0.04)' : 'rgba(83,74,183,0.03)', borderWidth: 0 },
+          p4: { type: 'box', xMin: 24, xMax: 36, backgroundColor: isDark ? 'rgba(83,74,183,0.06)' : 'rgba(83,74,183,0.04)', borderWidth: 0 }
+        }
+      }
+    }
+  }
+});
+
+function updateUI(rd) {
+  const phases = [
+    { label: '6개월', idx: 6, elDiff: 'm6diff', elWho: 'm6who' },
+    { label: '12개월', idx: 12, elDiff: 'm12diff', elWho: 'm12who' },
+    { label: '36개월', idx: 36, elDiff: 'm36diff', elWho: 'm36who' }
+  ];
+
+  phases.forEach(p => {
+    const diff = Math.abs(Math.round(PURCHASE - rd[p.idx]));
+    const rentalCheaper = rd[p.idx] < PURCHASE;
+    document.getElementById(p.elDiff).textContent = diff.toLocaleString() + '만원';
+    document.getElementById(p.elWho).textContent = rentalCheaper ? '렌탈이 저렴' : '구매가 저렴';
+  });
+
+  const bep = findBEP(rd);
+  document.getElementById('bep').textContent = bep ? Math.round(bep) + '개월차' : '36개월 내 미도달';
+
+  const checkpoints = [
+    { label: '6개월', idx: 6 },
+    { label: '12개월', idx: 12 },
+    { label: '24개월', idx: 24 },
+    { label: '36개월', idx: 36 }
+  ];
+  let html = '';
+  checkpoints.forEach(p => {
+    const rv = Math.round(rd[p.idx]);
+    const diff = rv - PURCHASE;
+    const absDiff = Math.abs(diff);
+    const tagClass = diff < -50 ? 'background:var(--color-background-success,#EAF3DE);color:var(--color-text-success,#27500A);' 
+                   : diff > 50 ? 'background:var(--color-background-info,#E6F1FB);color:var(--color-text-info,#0C447C);' 
+                   : 'background:var(--color-background-warning,#FAEEDA);color:var(--color-text-warning,#633806);';
+    const tagText = diff < -50 ? '렌탈 유리' : diff > 50 ? '구매 유리' : '비슷';
+    html += '<tr>'
+      + '<td style="padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);font-weight:500;">' + p.label + '</td>'
+      + '<td style="padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);text-align:right;">' + rv.toLocaleString() + '만원</td>'
+      + '<td style="padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);text-align:right;">' + PURCHASE.toLocaleString() + '만원</td>'
+      + '<td style="padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);text-align:right;">' + (diff > 0 ? '+' : '') + diff.toLocaleString() + '만원</td>'
+      + '<td style="padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);text-align:center;"><span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500;' + tagClass + '">' + tagText + '</span></td>'
+      + '</tr>';
+  });
+  document.getElementById('phaseBody').innerHTML = html;
+}
+
+updateUI(rentalBase);
+
+document.getElementById('turnover').addEventListener('input', function() {
+  const val = parseInt(this.value);
+  document.getElementById('turnoverOut').textContent = val + '%';
+  const nr = calcRental(val);
+  if (val > 0) { chart.data.datasets[2].data = nr; chart.data.datasets[2].hidden = false; }
+  else { chart.data.datasets[2].hidden = true; }
+  const active = val > 0 ? nr : rentalBase;
+  const bep = findBEP(active);
+  const ann = chart.options.plugins.annotation.annotations.bepLine;
+  if (bep !== null) { ann.xMin = bep; ann.xMax = bep; ann.label.display = true; }
+  else { ann.label.display = false; ann.xMin = -1; ann.xMax = -1; }
+  chart.update();
+  updateUI(active);
+});
+</script>
